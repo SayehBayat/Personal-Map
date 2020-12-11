@@ -129,6 +129,7 @@ if __name__ == '__main__':
     g = 9 #geohash length, a 1.2km x 609.4m square area
     b = 12 # number of time bins per day
     tdf = create_df(df, g=9, b=12)
-    print(tdf.head())
+    tdf.to_csv('./data/featured-dataset.csv')
+    print(tdf.info())
     exit()
 
