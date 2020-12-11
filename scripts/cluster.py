@@ -1,17 +1,12 @@
 from geopy.distance import great_circle
+import os
+import pandas as pd
+import datetime
 
-"""
-INPUTS:
-    df={o1,o2,...,on} Set of objects
-    CEps = Outer radius for density calculation
-    Eps = Inner radius defining the density calculation are
-    MinPts = Minimun number of points in neighborhood
-OUTPUT:
-    df = Updated dataframe with annotated clusters
-"""
+# Adapted from https://github.com/jayachithra/T-DBSCAN
+# Original paper: "T-DBSCAN: A Spatiotemporal Density Clustering for GPS Trajectory Segmentation"
 
-
-def T_DBSCAN(df, CEps, Eps, MinPts):
+def T_DBSCAN(df, CEps=500, Eps=100, MinPts=3):
     C = 0
     Cp = {}
     UNMARKED = 777777
@@ -23,7 +18,7 @@ def T_DBSCAN(df, CEps, Eps, MinPts):
     for index, P in df.iterrows():
         if index > MaxId:
 
-            df.set_value(index, 'visited', 'visited')
+            df.at[index, 'visited'] = 'visited'
             # search for continuous density-based neighbours N
             N = getNeighbors(P, CEps, Eps, df, index)
             MaxId = index
@@ -105,6 +100,25 @@ def mergeClusters(Cp):
 def updateClusters(df, Cp):
     for idx, val in Cp.items():
         for index in val:
-            df.set_value(index, 'cluster', idx)
+            df.at[index, 'cluster'] = idx
 
     return df
+
+def get_user_df_sorted(df,uid):
+    df1 = df[df["uid"] == uid]
+    df1.reset_index(drop=True, inplace=True)
+    df1["timestamp"] = df1['CreatedTime(Eastern Time)'].apply(timestr_to_timestamp)
+    df1 = df1.rename(columns={"Longitude": "longitude", "Latitude": "latitude"})
+    return df1.sort_values(by=['timestamp'])
+
+def timestr_to_timestamp(date_time_str):
+    return datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S').timestamp()
+
+if __name__ == '__main__':
+    os.chdir('..')
+    df = pd.read_csv("./data/dementia_data.csv")
+    df1 = get_user_df_sorted(df, "GPS5398")
+    cdf = T_DBSCAN(df1)
+    #df1 = df[df["uid"] == "GPS5398"]
+    #df1.reset_index(drop=True, inplace=True)
+    print(cdf.head())
