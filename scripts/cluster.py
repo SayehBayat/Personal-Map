@@ -116,9 +116,11 @@ def timestr_to_timestamp(date_time_str):
 
 if __name__ == '__main__':
     os.chdir('..')
-    df = pd.read_csv("./data/dementia_data.csv")
-    df1 = get_user_df_sorted(df, "GPS5398")
-    cdf = T_DBSCAN(df1)
+    cdf = pd.read_csv("./data/cluster.csv")
+    #df1 = get_user_df_sorted(df, "GPS5398")
+    #cdf = T_DBSCAN(df1)
+    #cdf.to_csv("./data/cluster.csv")
     #df1 = df[df["uid"] == "GPS5398"]
     #df1.reset_index(drop=True, inplace=True)
-    print(cdf.head())
+    cdf.groupby(cdf["cluster"]).count()
+    print(cdf.cluster.unique())
