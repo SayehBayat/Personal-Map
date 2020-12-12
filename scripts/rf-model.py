@@ -1,13 +1,14 @@
 ### Adapted from https://github.com/carlosbkm/car-destination-prediction/blob/master/random-forest-model.ipynb
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import geohash
 import os
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
 from haversine import haversine, Unit
 
 # Get the longitude and latitude from the geohash
@@ -45,7 +46,7 @@ def model(featuredDataset):
     columns_y = ['end_lat', 'end_lon']
     X = featuredDataset[columns_X]
     y = featuredDataset[columns_y]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     print('X: ({}, {})'.format(*X.shape))
     print('y: ({}, {})'.format(*y.shape))
@@ -54,36 +55,47 @@ def model(featuredDataset):
     print('X_test: ({}, {})'.format(*X_test.shape))
     print('y_test: ({}, {})'.format(*y_test.shape))
 
-    # Create a k-Nearest Neighbors Regression estimator
-    knn_estimator = KNeighborsRegressor()
-    # knn_parameters = {"n_neighbors": [1,2,5,10,20,50,100]}
-    knn_parameters = {"n_neighbors": [1, 2]}
-    knn_best = cv_optimize(knn_estimator, knn_parameters, X_train, y_train, score_func='neg_mean_squared_error')
+    # Set the parameters by cross-validation
+    tuned_parameters = {'n_estimators': [2, 5, 10, 20, 40], 'max_depth': [None, 1, 2, 3, 4],
+                        'min_samples_split': [2, 3, 4, 5, 6]}
 
-    knn_reg = knn_best.fit(X_train, y_train)
-    knn_training_accuracy = knn_reg.score(X_train, y_train)
-    knn_test_accuracy = knn_reg.score(X_test, y_test)
-    print("############# based on standard predict ################")
-    print("R^2 on training data: %0.8f" % (knn_training_accuracy))
-    print("R^2 on test data:     %0.8f" % (knn_test_accuracy))
-    print("RMSE on test data:     %0.8f" % np.sqrt(mean_squared_error(knn_reg.predict(X_test), y_test)))
+    # clf = ensemble.RandomForestRegressor(n_estimators=500, n_jobs=1, verbose=1)
+    gridCV = GridSearchCV(RandomForestRegressor(), tuned_parameters, cv=2, n_jobs=-1, verbose=1)
+    gridCV.fit(X_train, y_train)
+    print(gridCV.best_estimator_)
 
-    sampleds = pd.DataFrame(featuredDataset, columns=(columns_X + columns_y))
-    y_pred = knn_reg.predict(sampleds.iloc[:, :-2])
-    return(knn_reg.predict(X_test), y_test)
+    reg = gridCV.best_estimator_
+    training_accuracy = reg.score(X_train, y_train)
+    valid_accuracy = reg.score(X_test, y_test)
+    rmsetrain = np.sqrt(mean_squared_error(reg.predict(X_train), y_train))
+    rmsevalid = np.sqrt(mean_squared_error(reg.predict(X_test), y_test))
+    print(" R^2 (train) = %0.6f, R^2 (valid) = %0.6f, RMSE (train) = %0.6f, RMSE (valid) = %0.6f" % (training_accuracy, valid_accuracy, rmsetrain, rmsevalid))
+    return reg, X, X_train
 
 if __name__ == '__main__':
     os.chdir('..')
     df = pd.read_csv("./data/featured-dataset.csv")
     df = df.drop(df.columns[0], axis=1)
     featuredDataset = further_data_prep(df)
-    y_train, y_pred = model(featuredDataset)
-    y_pred = y_pred.values
-    print(y_train, y_pred)
-    dists = []
-    for i in range(len(y_pred)):
-        a = haversine(y_train[i], y_pred[i])
-        print(a)
-        dists.append(a)
+    reg, X, X_train = model(featuredDataset)
+    importances = reg.feature_importances_
+    std = np.std([tree.feature_importances_ for tree in reg.estimators_],
+                 axis=0)
+    indices = np.argsort(importances)[::-1]
 
-    print("Mean Dist:", np.mean(dists))
+    # Print the feature ranking
+    print("Feature ranking:")
+
+    for f in range(X.shape[1]):
+        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+
+    # Plot the feature importances of the forest
+    feature_names = X_train.columns
+    plt.figure()
+    plt.title("Feature importances")
+    plt.bar(range(X_train.shape[1]), importances[indices],
+            color="r", yerr=std[indices], align="center")
+    plt.xticks(range(X_train.shape[1]), feature_names)
+    plt.xlim([-1, X_train.shape[1]])
+    plt.show()
+
