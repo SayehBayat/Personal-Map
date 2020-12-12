@@ -79,7 +79,7 @@ def date_extractor(date_str, b, minutes_per_bin):
 
 def data_cleaner(zipped_row):
     # takes a tuple (row,g,b,minutes_per_bin) as a parameter and returns a tuple of the form:
-    # (time_cat, time_num, time_cos, time_sin, day_cat, day_num, day_cos, day_sin, weekend,geohash)
+    # (time_cat, time_num, time_cos, time_sin, day_cat, day_num, day_cos, day_sin, weekend, geohash)
     row = zipped_row[0]
     g = zipped_row[1]
     b = zipped_row[2]
@@ -125,11 +125,11 @@ def create_df(df, g=9, b=12):
 
 if __name__ == '__main__':
     os.chdir('..')
-    df = pd.read_csv("./data/trips.csv")
+    df = pd.read_csv("./data/trips_3797.csv")
     g = 9 #geohash length, a 1.2km x 609.4m square area
     b = 12 # number of time bins per day
     tdf = create_df(df, g=9, b=12)
-    tdf.to_csv('./data/featured-dataset.csv')
+    tdf.to_csv('./data/featured-dataset_3797.csv')
     print(tdf.info())
     exit()
 

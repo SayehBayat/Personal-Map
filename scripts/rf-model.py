@@ -73,19 +73,53 @@ def model(featuredDataset):
                                                                                                      valid_accuracy,
                                                                                                      rmsetrain,
                                                                                                      rmsevalid))
-    return reg, X, X_train
-
+    return reg, X, X_train, reg.predict(X_test), y_test.values, reg.predict(X_train), y_train.values
+def find_dist(y1, y2):
+    dists = []
+    for i in range(len(y1)):
+        a = haversine(y1[i], y2[i])
+        dists.append(a)
+    return dists
 if __name__ == '__main__':
     os.chdir('..')
-    df = pd.read_csv("./data/featured-dataset.csv")
+    df = pd.read_csv("./data/featured-dataset_3797.csv")
     df = df.drop(df.columns[0], axis=1)
     featuredDataset = further_data_prep(df)
-    reg, X, X_train = model(featuredDataset)
+    reg, X, X_train, y_pred1, y_test, y_pred2, y_train = model(featuredDataset)
+    print("Valid Performance:")
+    d = find_dist(y_pred1, y_test)
+    print(d)
+    print(np.mean(d))
+    print("Train Performance:")
+    d = find_dist(y_pred2, y_train)
+    print(d)
+    d_array = np.array(d)**2
+    print("RMSE: ", np.sqrt(np.sum(d_array)))
+    print(np.mean(d))
     importances = reg.feature_importances_
     std = np.std([tree.feature_importances_ for tree in reg.estimators_],
                  axis=0)
     indices = np.argsort(importances)[::-1]
+    # plot dataset
+    plt.figure()
+    plt.subplot(2,2,1)
+    plt.plot(np.array(y_train)[:,0])
+    plt.plot(np.array(y_pred2)[:,0])
 
+    plt.subplot(2, 2, 2)
+    plt.plot(np.array(y_test)[:, 0])
+    plt.plot(np.array(y_pred1)[:, 0])
+
+    plt.subplot(2, 2, 3)
+    plt.plot(np.array(y_train)[:,1])
+    plt.plot(np.array(y_pred2)[:,1])
+
+    plt.subplot(2, 2, 4)
+    plt.plot(np.array(y_test)[:, 1])
+    plt.plot(np.array(y_pred1)[:, 1])
+    plt.show()
+
+    exit()
     # Print the feature ranking
     print("Feature ranking:")
 
@@ -101,4 +135,6 @@ if __name__ == '__main__':
     plt.xticks(range(X_train.shape[1]), feature_names)
     plt.xlim([-1, X_train.shape[1]])
     plt.show()
+
+
 

@@ -45,7 +45,7 @@ def model(featuredDataset):
     columns_y = ['end_lat', 'end_lon']
     X = featuredDataset[columns_X]
     y = featuredDataset[columns_y]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     print('X: ({}, {})'.format(*X.shape))
     print('y: ({}, {})'.format(*y.shape))
@@ -70,16 +70,32 @@ def model(featuredDataset):
 
     sampleds = pd.DataFrame(featuredDataset, columns=(columns_X + columns_y))
     y_pred = knn_reg.predict(sampleds.iloc[:, :-2])
-    return(knn_reg.predict(X_test), y_test)
+    return knn_reg.predict(X_test), y_test.values, knn_reg.predict(X_train), y_train.values
+
+def find_dist(y1, y2):
+    dists = []
+    for i in range(len(y1)):
+        a = haversine(y1[i], y2[i])
+        dists.append(a)
+    return dists
 
 if __name__ == '__main__':
     os.chdir('..')
-    df = pd.read_csv("./data/featured-dataset.csv")
+    df = pd.read_csv("./data/featured-dataset_2051.csv")
     df = df.drop(df.columns[0], axis=1)
     featuredDataset = further_data_prep(df)
-    y_train, y_pred = model(featuredDataset)
+    y_pred1, y_test, y_pred2, y_train = model(featuredDataset)
+    print("Train Performance:")
+    d = find_dist(y_pred1, y_test)
+    print(d)
+    print(np.mean(d))
+    print("Valid Performance:")
+    d = find_dist(y_pred2, y_train)
+    print(d)
+    print(np.mean(d))
+    exit()
     y_pred = y_pred.values
-    print(y_train, y_pred)
+    #print(y_train, y_pred)
     dists = []
     for i in range(len(y_pred)):
         a = haversine(y_train[i], y_pred[i])

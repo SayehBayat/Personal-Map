@@ -6,7 +6,7 @@ import datetime
 # Adapted from https://github.com/jayachithra/T-DBSCAN
 # Original paper: "T-DBSCAN: A Spatiotemporal Density Clustering for GPS Trajectory Segmentation"
 
-def T_DBSCAN(df, CEps=500, Eps=100, MinPts=3):
+def T_DBSCAN(df, CEps=200, Eps=100, MinPts=3):
     C = 0
     Cp = {}
     UNMARKED = 777777
@@ -118,9 +118,10 @@ if __name__ == '__main__':
     os.chdir('..')
     #cdf = pd.read_csv("./data/cluster.csv")
     df = pd.read_csv("./data/dementia_data.csv")
-    df1 = get_user_df_sorted(df, "GPS5398")
+    print(df.uid.unique())
+    df1 = get_user_df_sorted(df, "GPS2051")
     cdf = T_DBSCAN(df1)
-    cdf.to_csv("./data/cluster.csv")
+    cdf.to_csv("./data/cluster_2051.csv")
     #df1 = df[df["uid"] == "GPS5398"]
     #df1.reset_index(drop=True, inplace=True)
     #cdf.groupby(cdf["cluster"]).count()

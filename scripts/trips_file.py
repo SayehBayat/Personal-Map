@@ -17,18 +17,20 @@ def get_trips_stops(df):
 def create_trip_df(trips):
     tdf = {'eventTimeStart': [], 'latStart': [], 'lonStart': [], 'latEnd': [], 'lonEnd': [], 'len': []}
     for trip in trips:
-        tdf["eventTimeStart"].append(trip['CreatedTime(Eastern Time)'].tolist()[0])
-        tdf["latStart"].append(trip['latitude'].tolist()[0])
-        tdf["lonStart"].append(trip['longitude'].tolist()[0])
-        tdf["latEnd"].append(trip['latitude'].tolist()[-1])
-        tdf["lonEnd"].append(trip['longitude'].tolist()[-1])
-        tdf["len"].append(len(trip))
+        print(len(trip))
+        if len(trip) > 2:
+            tdf["eventTimeStart"].append(trip['CreatedTime(Eastern Time)'].tolist()[0])
+            tdf["latStart"].append(trip['latitude'].tolist()[0])
+            tdf["lonStart"].append(trip['longitude'].tolist()[0])
+            tdf["latEnd"].append(trip['latitude'].tolist()[-1])
+            tdf["lonEnd"].append(trip['longitude'].tolist()[-1])
+            tdf["len"].append(len(trip))
     return pd.DataFrame(tdf)
 if __name__ == '__main__':
     os.chdir('..')
-    df = pd.read_csv("./data/cluster.csv")
+    df = pd.read_csv("./data/cluster_3797.csv")
     trips, stops = get_trips_stops(df)
     tdf = create_trip_df(trips[2:])
-    tdf.to_csv("./data/trips.csv")
+    tdf.to_csv("./data/trips_2051.csv")
     print(tdf.len)
     #print(len(stops))
