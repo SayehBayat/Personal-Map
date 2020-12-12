@@ -8,7 +8,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-
+from haversine import haversine, Unit
 
 # Get the longitude and latitude from the geohash
 def decodegeo(geo, which):
@@ -45,7 +45,7 @@ def model(featuredDataset):
     columns_y = ['end_lat', 'end_lon']
     X = featuredDataset[columns_X]
     y = featuredDataset[columns_y]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.15, random_state=42)
 
     print('X: ({}, {})'.format(*X.shape))
     print('y: ({}, {})'.format(*y.shape))
@@ -78,4 +78,12 @@ if __name__ == '__main__':
     df = df.drop(df.columns[0], axis=1)
     featuredDataset = further_data_prep(df)
     y_train, y_pred = model(featuredDataset)
-    print(list(zip(y_train, y_pred )))
+    y_pred = y_pred.values
+    print(y_train, y_pred)
+    dists = []
+    for i in range(len(y_pred)):
+        a = haversine(y_train[i], y_pred[i])
+        print(a)
+        dists.append(a)
+
+    print("Mean Dist:", np.mean(dists))

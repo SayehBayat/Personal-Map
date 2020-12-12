@@ -28,7 +28,7 @@ if __name__ == '__main__':
     os.chdir('..')
     df = pd.read_csv("./data/cluster.csv")
     trips, stops = get_trips_stops(df)
-    tdf = create_trip_df(trips)
+    tdf = create_trip_df(trips[2:])
     tdf.to_csv("./data/trips.csv")
     print(tdf.len)
     #print(len(stops))
