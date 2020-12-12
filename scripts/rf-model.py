@@ -69,7 +69,10 @@ def model(featuredDataset):
     valid_accuracy = reg.score(X_test, y_test)
     rmsetrain = np.sqrt(mean_squared_error(reg.predict(X_train), y_train))
     rmsevalid = np.sqrt(mean_squared_error(reg.predict(X_test), y_test))
-    print(" R^2 (train) = %0.6f, R^2 (valid) = %0.6f, RMSE (train) = %0.6f, RMSE (valid) = %0.6f" % (training_accuracy, valid_accuracy, rmsetrain, rmsevalid))
+    print(" R^2 (train) = %0.6f, R^2 (valid) = %0.6f, RMSE (train) = %0.6f, RMSE (valid) = %0.6f" % (training_accuracy,
+                                                                                                     valid_accuracy,
+                                                                                                     rmsetrain,
+                                                                                                     rmsevalid))
     return reg, X, X_train
 
 if __name__ == '__main__':
@@ -89,7 +92,7 @@ if __name__ == '__main__':
     for f in range(X.shape[1]):
         print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
 
-    # Plot the feature importances of the forest
+    # Plot the feature importance of the forest
     feature_names = X_train.columns
     plt.figure()
     plt.title("Feature importances")
